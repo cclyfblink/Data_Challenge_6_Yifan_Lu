@@ -1,0 +1,57 @@
+---
+title: "Data Challenge 6"
+author: "Yifan Lu"
+output:
+  html_document:
+    fig_height: 4.5
+    fig_width: 8
+  pdf_document:
+    fig_height: 3.5
+    fig_width: 3.5
+  word_document:
+    toc: no
+---
+https://github.com/cclyfblink/Data_Challenge_5_Yifan_Lu
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(message = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+```
+```{r}
+## load in the required libraries 
+library(tidyverse)
+
+## disable scientific notation
+options(scipen = 999)
+```
+
+## 1 Simulate Data
+```{r}
+## load in required libraries 
+library(hbim)
+library(mvtnorm)
+
+## set a seed for reproducibility
+set.seed(12345)
+
+## create an exhangeable variance covariance for the data
+sigma <- make.v(n = 100, r = .6, sig2 = 1)
+
+## create centers for the two clusters. 
+center_1 <- rep(1, 100)
+center_2 <- rep(3, 100)
+
+## simulate data for two groups from a multivariate normal distribution 
+data = rbind(rmvnorm(50, mean = center_1, sigma = sigma),
+             rmvnorm(50, mean = center_2, sigma = sigma))
+
+## add a group label to the data 
+data = data.frame(group = c(rep(1, 50), rep(2, 50)), data) 
+```
+
+## 2 Visualize the Data
+```{r}
+
+```
+
