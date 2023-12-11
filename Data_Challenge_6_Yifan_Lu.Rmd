@@ -11,7 +11,7 @@ output:
   word_document:
     toc: no
 ---
-https://github.com/cclyfblink/Data_Challenge_5_Yifan_Lu
+https://github.com/cclyfblink/Data_Challenge_6_Yifan_Lu
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -21,6 +21,9 @@ knitr::opts_chunk$set(warning = FALSE)
 ```{r}
 ## load in the required libraries 
 library(tidyverse)
+library(corrplot)
+library(mclust)
+
 
 ## disable scientific notation
 options(scipen = 999)
@@ -52,6 +55,78 @@ data = data.frame(group = c(rep(1, 50), rep(2, 50)), data)
 
 ## 2 Visualize the Data
 ```{r}
+# create density plots for the first three variables
+ggplot(data, aes(x = X1, fill = factor(group))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "X1", y = "Density", fill = "Group")
+
+ggplot(data, aes(x = X2, fill = factor(group))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "X2", y = "Density", fill = "Group")
+
+ggplot(data, aes(x = X3, fill = factor(group))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "X3", y = "Density", fill = "Group")
+```
+
+**Comment:**
+The density plots display two distinct clusters for each variable, with each distribution overlapping in the middle, but with clear distinctions in peak values. This suggests that the data is separable.
+
+```{r}
+# compute the correlation matrix of the data
+cor_matrix <- cor(data %>% select(X1, X2, X3)) 
+
+# create a correlation plot with color and numbers
+corrplot(cor_matrix, method = "color")
+```
+
+**Comment:**
+The correlation plot shows that the variables are highly correlated with each other, which suggests that the data is not separable.
+
+## 3 Perform PCA on the Data
+```{r}
+# Perform PCA
+pca <- prcomp(data[, -1])
+
+# Cumulative variance explained
+plot(cumsum(pca$sdev^2 / sum(pca$sdev^2)), type = "p", xlab = "Principal Component", ylab = "Cumulative Variance Explained", main = "Cumulative Variance Explained by Principal Components")
 
 ```
 
+```{r}
+clPairs(pca$x[, 1:3], data$group)
+```
+```{r}
+# K-means
+kmeans_fit <- kmeans(pca$x[, -1], centers = 2)
+
+# Contingency table
+table(kmeans_fit$cluster, data$group)
+```
+
+```{r}
+# K-means on first 10 PC scores
+kmeans_fit_pc <- kmeans(pca$x[, 1:10], centers = 2)
+
+# Contingency table
+table(kmeans_fit_pc$cluster, data$group)
+```
+
+```{r}
+# GMM clustering
+gmm_fit <- Mclust(data[, -1], modelNames = "EII", G = 2)
+
+# Contingency table
+table(gmm_fit$classification, data$group)
+
+```
+
+```{r}
+# GMM with first 10 PC scores
+gmm_fit_pc <- Mclust(pca$x[, 1:10], modelNames = "EII", G = 2)
+
+# Contingency table
+table(gmm_fit_pc$classification, data$group)
+```
+**Comment:**
+We observed that K-means clustering on the whole dataset exhibited significantly worse performance compared to performing K-means on the first 10 principal component scores. This is likely due to the correlation between variables in the original data, to which K-means is sensitive. In contrast, GMM clustering showed similar performance using the whole dataset and the first 10 PC scores, demonstrating its robustness to correlation.
